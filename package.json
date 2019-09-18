@@ -1,0 +1,17 @@
+{
+  "name": "node-s3-upload",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint src --ignore-pattern node_modules --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.530.0",
+    "eslint": "^6.4.0"
+  }
+}
