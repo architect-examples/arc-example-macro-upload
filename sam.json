@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "Exported by architect/package@1.0.44 on 2019-09-18T07:07:08.341Z",
+  "Description": "Exported by architect/package@1.0.44 on 2019-09-28T08:40:13.804Z",
   "Resources": {
     "NodeS3Upload": {
       "Type": "AWS::Serverless::Api",
@@ -149,10 +149,13 @@
             "NODE_ENV": "staging",
             "SESSION_TABLE_NAME": "jwe",
             "PYTHONPATH": "/var/task/vendor:/var/runtime:/opt/python",
-            "S3_KEY": {
+            "S3_UPLOAD_BUCKET": {
+              "Fn::Sub": "${BucketPrefix}-upload-bucket"
+            },
+            "S3_UPLOAD_KEY": {
               "Ref": "Creds"
             },
-            "S3_SECRET": {
+            "S3_UPLOAD_SECRET": {
               "Fn::GetAtt": [
                 "Creds",
                 "SecretAccessKey"
@@ -205,10 +208,13 @@
             "NODE_ENV": "staging",
             "SESSION_TABLE_NAME": "jwe",
             "PYTHONPATH": "/var/task/vendor:/var/runtime:/opt/python",
-            "S3_KEY": {
+            "S3_UPLOAD_BUCKET": {
+              "Fn::Sub": "${BucketPrefix}-upload-bucket"
+            },
+            "S3_UPLOAD_KEY": {
               "Ref": "Creds"
             },
-            "S3_SECRET": {
+            "S3_UPLOAD_SECRET": {
               "Fn::GetAtt": [
                 "Creds",
                 "SecretAccessKey"
@@ -261,10 +267,13 @@
             "NODE_ENV": "staging",
             "SESSION_TABLE_NAME": "jwe",
             "PYTHONPATH": "/var/task/vendor:/var/runtime:/opt/python",
-            "S3_KEY": {
+            "S3_UPLOAD_BUCKET": {
+              "Fn::Sub": "${BucketPrefix}-upload-bucket"
+            },
+            "S3_UPLOAD_KEY": {
               "Ref": "Creds"
             },
-            "S3_SECRET": {
+            "S3_UPLOAD_SECRET": {
               "Fn::GetAtt": [
                 "Creds",
                 "SecretAccessKey"
@@ -382,114 +391,13 @@
         ]
       }
     },
-    "Uploader": {
-      "Type": "AWS::IAM::User",
-      "Properties": {}
-    },
-    "StorageMacroMinimalPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "PolicyName": "StorageMacroPolicy",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": [
-                "s3:PutObject",
-                "s3:PutObjectAcl"
-              ],
-              "Resource": [
-                {
-                  "Fn::Sub": [
-                    "arn:aws:s3:::${bukkit}",
-                    {
-                      "bukkit": {
-                        "Ref": "picsBucket"
-                      }
-                    }
-                  ]
-                },
-                {
-                  "Fn::Sub": [
-                    "arn:aws:s3:::${bukkit}/*",
-                    {
-                      "bukkit": {
-                        "Ref": "picsBucket"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        "Users": [
-          {
-            "Ref": "Uploader"
-          }
-        ]
-      }
-    },
-    "Creds": {
-      "Type": "AWS::IAM::AccessKey",
-      "Properties": {
-        "UserName": {
-          "Ref": "Uploader"
-        }
-      }
-    },
-    "StorageMacroPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "DependsOn": "Role",
-      "Properties": {
-        "PolicyName": "StorageMacroPolicy",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject",
-                "s3:PutObjectAcl",
-                "s3:ListBucket"
-              ],
-              "Resource": [
-                {
-                  "Fn::Sub": [
-                    "arn:aws:s3:::${bukkit}",
-                    {
-                      "bukkit": {
-                        "Ref": "picsBucket"
-                      }
-                    }
-                  ]
-                },
-                {
-                  "Fn::Sub": [
-                    "arn:aws:s3:::${bukkit}/*",
-                    {
-                      "bukkit": {
-                        "Ref": "picsBucket"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        "Roles": [
-          {
-            "Ref": "Role"
-          }
-        ]
-      }
-    },
-    "picsBucket": {
+    "UploadBucket": {
+      "DependsOn": "UploadLambdaInvokePermission",
       "Type": "AWS::S3::Bucket",
-      "DeletionPolicy": "Delete",
       "Properties": {
+        "BucketName": {
+          "Fn::Sub": "${BucketPrefix}-upload-bucket"
+        },
         "CorsConfiguration": {
           "CorsRules": [
             {
@@ -506,48 +414,197 @@
               "MaxAge": "3000"
             }
           ]
-        }
-      }
-    },
-    "picsParam": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Type": "String",
-        "Name": {
-          "Fn::Sub": [
-            "/${AWS::StackName}/storage/${bucket}",
+        },
+        "NotificationConfiguration": {
+          "LambdaConfigurations": [
             {
-              "bucket": "pics"
+              "Function": {
+                "Fn::GetAtt": [
+                  "UploadLambda",
+                  "Arn"
+                ]
+              },
+              "Event": "s3:ObjectCreated:*",
+              "Filter": {
+                "S3Key": {
+                  "Rules": [
+                    {
+                      "Name": "prefix",
+                      "Value": "raw"
+                    }
+                  ]
+                }
+              }
             }
           ]
-        },
-        "Value": {
-          "Ref": "picsBucket"
         }
       }
     },
-    "ParameterStorePolicy": {
-      "Type": "AWS::IAM::Policy",
-      "DependsOn": "Role",
+    "UploadLambdaInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
       "Properties": {
-        "PolicyName": "ArcParameterStorePolicy",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UploadLambda",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "s3.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:s3:::${BucketPrefix}-upload-bucket"
+        }
+      }
+    },
+    "UploadLambda": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "CodeUri": "./src/upload",
+        "Runtime": "nodejs8.10",
+        "MemorySize": 3008,
+        "Timeout": 60,
+        "Environment": {
+          "Variables": {
+            "S3_UPLOAD_BUCKET": {
+              "Fn::Sub": "${BucketPrefix}-upload-bucket"
+            },
+            "S3_UPLOAD_KEY": {
+              "Ref": "Creds"
+            },
+            "S3_UPLOAD_SECRET": {
+              "Fn::GetAtt": [
+                "Creds",
+                "SecretAccessKey"
+              ]
+            },
+            "NODE_ENV": "staging"
+          }
+        },
+        "Role": {
+          "Fn::Sub": [
+            "arn:aws:iam::${AWS::AccountId}:role/${role}",
+            {
+              "role": {
+                "Ref": "UploadRole"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Uploader": {
+      "Type": "AWS::IAM::User",
+      "Properties": {}
+    },
+    "UploadMinimalPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "DependsOn": "UploadBucket",
+      "Properties": {
+        "PolicyName": "UploadPolicy",
         "PolicyDocument": {
           "Statement": [
             {
               "Effect": "Allow",
-              "Action": "ssm:GetParametersByPath",
-              "Resource": {
-                "Fn::Sub": [
-                  "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}",
-                  {}
-                ]
-              }
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:aws:s3:::${BucketPrefix}-upload-bucket"
+                },
+                {
+                  "Fn::Sub": "arn:aws:s3:::${BucketPrefix}-upload-bucket/*"
+                }
+              ]
+            }
+          ]
+        },
+        "Users": [
+          {
+            "Ref": "Uploader"
+          }
+        ]
+      }
+    },
+    "Creds": {
+      "Type": "AWS::IAM::AccessKey",
+      "DependsOn": "Uploader",
+      "Properties": {
+        "UserName": {
+          "Ref": "Uploader"
+        }
+      }
+    },
+    "UploadRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ArcGlobalPolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "UploadPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "UploadMacroPolicy",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:PutObjectAcl",
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:aws:s3:::${BucketPrefix}-upload-bucket"
+                },
+                {
+                  "Fn::Sub": "arn:aws:s3:::${BucketPrefix}-upload-bucket/*"
+                }
+              ]
             }
           ]
         },
         "Roles": [
           {
             "Ref": "Role"
+          },
+          {
+            "Ref": "UploadRole"
           }
         ]
       }
@@ -572,6 +629,12 @@
       "Value": {
         "Ref": "NodeS3Upload"
       }
+    }
+  },
+  "Parameters": {
+    "BucketPrefix": {
+      "Type": "String",
+      "Default": "by20e"
     }
   }
 }

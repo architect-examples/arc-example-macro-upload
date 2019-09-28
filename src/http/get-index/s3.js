@@ -21,9 +21,9 @@ function s3Params(config, params) {
   return {
     key: params.filename,
     acl: 'public-read',
-   // success_action_status: '201',
+    success_action_redirect: params.redirect,
     policy: policyBase64,
-    "content-type": params.contentType,
+    // "content-type": params.contentType,
     'x-amz-algorithm': 'AWS4-HMAC-SHA256',
     'x-amz-credential': credential,
     'x-amz-date': dateString() + 'T000000Z',
@@ -49,6 +49,7 @@ function s3UploadPolicy(config, params, credential) {
       { bucket: config.bucket },
       { key: params.filename },
       { acl: 'public-read' },
+      { success_action_redirect: params.redirect },
       //{ success_action_status: "201" },
       // Optionally control content type and file size
       // A content-type clause is required (even if it's all-permissive)

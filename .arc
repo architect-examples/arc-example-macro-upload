@@ -7,10 +7,7 @@ get /success
 get /images/:file
 
 @macros
-storage
-
-@storage
-pics
+upload
 
 @aws
 bucket begin-east-1

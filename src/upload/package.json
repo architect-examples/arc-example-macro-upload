@@ -1,0 +1,7 @@
+{
+  "name": "upload",
+  "dependencies": {
+    "file-type": "^12.3.0",
+    "gm": "^1.23.1"
+  }
+}

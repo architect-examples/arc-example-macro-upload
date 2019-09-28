@@ -8,12 +8,13 @@ let s3 = require('./s3')
  * @param {string} params.redirect
  * @returns {DOMString}
  */
-module.exports = async function form({bucket}) {
+module.exports = function form({bucket, redirect}) {
 
-  //let acl = 'public-read'
-  let key = '${filename}'
-  let idx = process.env.S3_KEY
-  let secret = process.env.S3_SECRET
+  let nonce = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 3)
+  let name = `${Date.now()}-${nonce}`
+  let key = `raw/${name}`
+  let idx = process.env.S3_UPLOAD_KEY
+  let secret = process.env.S3_UPLOAD_SECRET
   let region = process.env.AWS_REGION
   let type = 'image/'
 
@@ -23,12 +24,11 @@ module.exports = async function form({bucket}) {
     bucket,
     region
   }
-  let doc = s3(config, {filename: key, contentType: type})
-  let hidden = k=> `<input type=hidden name=${k} value="${doc.params[k]}">`
-  return `
-  <pre>${JSON.stringify(doc, null, 2)}</pre>
-  <pre>${JSON.stringify(Buffer.from(doc.params.policy, 'base64').toString(), null, 2)}</pre>
 
+  let doc = s3(config, {filename: key, contentType: type, redirect})
+  let hidden = k=> `<input type=hidden name=${k} value="${doc.params[k]}">`
+
+  return `
   <form action=${doc.endpoint} method=post enctype=multipart/form-data>
     ${Object.keys(doc.params).map(hidden).join('')} 
     <!-- do the thing -->
