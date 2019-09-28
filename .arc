@@ -7,7 +7,7 @@ get /success
 get /images/:file
 
 @macros
-upload
+architect/macro-upload
 
 @aws
 bucket begin-east-1

@@ -1,4 +1,4 @@
-let form = require('./form')
+let form = require('@architect/macro-upload/form')
 let getImages = require('./get-images')
 
 exports.handler = async function http(req) {

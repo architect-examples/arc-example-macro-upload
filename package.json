@@ -11,6 +11,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@architect/architect": "^6.0.10",
+    "@architect/macro-upload": "^1.0.0",
     "aws-sdk": "^2.530.0",
     "eslint": "^6.4.0"
   }

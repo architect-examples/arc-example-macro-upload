@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "Exported by architect/package@1.0.44 on 2019-09-28T20:04:23.278Z",
+  "Description": "Exported by architect/package@1.0.44 on 2019-09-28T20:32:35.335Z",
   "Resources": {
     "NodeS3Upload": {
       "Type": "AWS::Serverless::Api",
@@ -629,12 +629,18 @@
       "Value": {
         "Ref": "NodeS3Upload"
       }
+    },
+    "UploadBucket": {
+      "Description": "S3 Bucket for uploads",
+      "Value": {
+        "Fn::Sub": "${BucketPrefix}-upload-bucket"
+      }
     }
   },
   "Parameters": {
     "BucketPrefix": {
       "Type": "String",
-      "Default": "10dvzk"
+      "Default": "11e5l9"
     }
   }
 }
