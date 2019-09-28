@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "Exported by architect/package@1.0.44 on 2019-09-28T08:40:13.804Z",
+  "Description": "Exported by architect/package@1.0.44 on 2019-09-28T20:04:23.278Z",
   "Resources": {
     "NodeS3Upload": {
       "Type": "AWS::Serverless::Api",
@@ -634,7 +634,7 @@
   "Parameters": {
     "BucketPrefix": {
       "Type": "String",
-      "Default": "by20e"
+      "Default": "10dvzk"
     }
   }
 }

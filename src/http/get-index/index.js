@@ -5,13 +5,9 @@ exports.handler = async function http(req) {
   let html
   try {
 
-    let bucket = process.env.S3_UPLOAD_BUCKET
     let redirect = `https://${req.headers.Host}/staging/success`
-    let upload = form({bucket, redirect})
-    let images = await getImages({bucket})
-    let filter = k=> k.Key.startsWith('orig/')
-    let map = k=> k.Key.replace('orig/', '')
-    let img = images.Contents.filter(filter).map(map)
+    let upload = form({redirect})
+    let images = await getImages()
     let link = l=> `<a href=/staging/images/${l}><img src=/staging/images/${l}?thumb></a>`
 
     html = `
@@ -27,8 +23,7 @@ exports.handler = async function http(req) {
       ${upload}
 
       <h1>images</h1> 
-      ${img.map(link).join('\n')}
-
+      ${images.map(link).join('\n')}
       <hr>
       <pre>${JSON.stringify(images, null, 2)}</pre>
       </body>

@@ -21,6 +21,7 @@ module.exports = {
     'no-console': 'off',
     'no-inner-declarations': 'off',
     'no-redeclare': 'off',
+    'no-prototype-builtins': 'off',
     // style specific
     'no-trailing-spaces': 'error'
   }

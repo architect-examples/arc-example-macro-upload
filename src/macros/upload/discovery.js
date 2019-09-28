@@ -34,5 +34,13 @@ module.exports = function discovery(arc, cfn) {
     }
   })
 
+  // add the bucket to the outputs also
+  cfn.Outputs.UploadBucket = {
+    Description: 'S3 Bucket for uploads',
+    Value: {
+      'Fn::Sub': '${BucketPrefix}-upload-bucket'
+    }
+  } 
+
   return cfn
 }

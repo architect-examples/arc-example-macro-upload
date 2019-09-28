@@ -1,15 +1,15 @@
 let s3 = require('./s3')
 
 /**
- * render an upload form
+ * render a direct to s3 file upload form
  *
  * @param {object} params
- * @param {string} params.bucket
  * @param {string} params.redirect
  * @returns {DOMString}
  */
-module.exports = function form({bucket, redirect}) {
+module.exports = function form({redirect}) {
 
+  let bucket = process.env.S3_UPLOAD_BUCKET
   let nonce = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 3)
   let name = `${Date.now()}-${nonce}`
   let key = `raw/${name}`
