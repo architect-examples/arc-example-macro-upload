@@ -1,9 +1,9 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "Exported by architect/package@1.0.44 on 2019-09-28T20:32:35.335Z",
+  "Description": "Exported by architect/package@1.3.4 on 2020-06-22T22:53:08.722Z",
   "Resources": {
-    "NodeS3Upload": {
+    "ExampleS3Upload": {
       "Type": "AWS::Serverless::Api",
       "Properties": {
         "StageName": "staging",
@@ -118,6 +118,47 @@
                   "type": "aws_proxy"
                 }
               }
+            },
+            "/_static/{proxy+}": {
+              "x-amazon-apigateway-any-method": {
+                "parameters": [
+                  {
+                    "name": "proxy",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "x-amazon-apigateway-integration": {
+                  "uri": {
+                    "Fn::Sub": [
+                      "http://${bukkit}.s3.${AWS::Region}.amazonaws.com/{proxy}",
+                      {
+                        "bukkit": {
+                          "Ref": "StaticBucket"
+                        }
+                      }
+                    ]
+                  },
+                  "responses": {
+                    "default": {
+                      "statusCode": "200"
+                    }
+                  },
+                  "requestParameters": {
+                    "integration.request.path.proxy": "method.request.path.proxy"
+                  },
+                  "passthroughBehavior": "when_no_match",
+                  "httpMethod": "ANY",
+                  "cacheNamespace": "xlr8r2",
+                  "cacheKeyParameters": [
+                    "method.request.path.proxy"
+                  ],
+                  "type": "http_proxy"
+                }
+              }
             }
           }
         },
@@ -133,7 +174,7 @@
       "Properties": {
         "Handler": "index.handler",
         "CodeUri": "./src/http/get-index",
-        "Runtime": "nodejs10.x",
+        "Runtime": "nodejs12.x",
         "MemorySize": 1152,
         "Timeout": 5,
         "Environment": {
@@ -144,11 +185,10 @@
             "ARC_CLOUDFORMATION": {
               "Ref": "AWS::StackName"
             },
-            "ARC_APP_NAME": "node-s3-upload",
+            "ARC_APP_NAME": "example-s3-upload",
             "ARC_HTTP": "aws_proxy",
             "NODE_ENV": "staging",
             "SESSION_TABLE_NAME": "jwe",
-            "PYTHONPATH": "/var/task/vendor:/var/runtime:/opt/python",
             "S3_UPLOAD_BUCKET": {
               "Fn::Sub": "${BucketPrefix}-upload-bucket"
             },
@@ -180,7 +220,7 @@
               "Path": "/",
               "Method": "GET",
               "RestApiId": {
-                "Ref": "NodeS3Upload"
+                "Ref": "ExampleS3Upload"
               }
             }
           }
@@ -192,7 +232,7 @@
       "Properties": {
         "Handler": "index.handler",
         "CodeUri": "./src/http/get-success",
-        "Runtime": "nodejs10.x",
+        "Runtime": "nodejs12.x",
         "MemorySize": 1152,
         "Timeout": 5,
         "Environment": {
@@ -203,11 +243,10 @@
             "ARC_CLOUDFORMATION": {
               "Ref": "AWS::StackName"
             },
-            "ARC_APP_NAME": "node-s3-upload",
+            "ARC_APP_NAME": "example-s3-upload",
             "ARC_HTTP": "aws_proxy",
             "NODE_ENV": "staging",
             "SESSION_TABLE_NAME": "jwe",
-            "PYTHONPATH": "/var/task/vendor:/var/runtime:/opt/python",
             "S3_UPLOAD_BUCKET": {
               "Fn::Sub": "${BucketPrefix}-upload-bucket"
             },
@@ -239,7 +278,7 @@
               "Path": "/success",
               "Method": "GET",
               "RestApiId": {
-                "Ref": "NodeS3Upload"
+                "Ref": "ExampleS3Upload"
               }
             }
           }
@@ -251,7 +290,7 @@
       "Properties": {
         "Handler": "index.handler",
         "CodeUri": "./src/http/get-images-000file",
-        "Runtime": "nodejs10.x",
+        "Runtime": "nodejs12.x",
         "MemorySize": 1152,
         "Timeout": 5,
         "Environment": {
@@ -262,11 +301,10 @@
             "ARC_CLOUDFORMATION": {
               "Ref": "AWS::StackName"
             },
-            "ARC_APP_NAME": "node-s3-upload",
+            "ARC_APP_NAME": "example-s3-upload",
             "ARC_HTTP": "aws_proxy",
             "NODE_ENV": "staging",
             "SESSION_TABLE_NAME": "jwe",
-            "PYTHONPATH": "/var/task/vendor:/var/runtime:/opt/python",
             "S3_UPLOAD_BUCKET": {
               "Fn::Sub": "${BucketPrefix}-upload-bucket"
             },
@@ -298,7 +336,7 @@
               "Path": "/images/{file}",
               "Method": "GET",
               "RestApiId": {
-                "Ref": "NodeS3Upload"
+                "Ref": "ExampleS3Upload"
               }
             }
           }
@@ -318,10 +356,20 @@
             "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${restApiId}/*/*",
             {
               "restApiId": {
-                "Ref": "NodeS3Upload"
+                "Ref": "ExampleS3Upload"
               }
             }
           ]
+        }
+      }
+    },
+    "StaticBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "AccessControl": "PublicRead",
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html",
+          "ErrorDocument": "404.html"
         }
       }
     },
@@ -357,36 +405,6 @@
                 }
               ]
             }
-          }
-        ]
-      }
-    },
-    "RoleReflectionPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "DependsOn": "Role",
-      "Properties": {
-        "PolicyName": "ArcRoleReflectionPolicy",
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": "iam:GetRolePolicy",
-              "Resource": {
-                "Fn::Sub": [
-                  "arn:aws:iam::${AWS::AccountId}:role/${role}",
-                  {
-                    "role": {
-                      "Ref": "Role"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "Roles": [
-          {
-            "Ref": "Role"
           }
         ]
       }
@@ -461,7 +479,7 @@
       "Properties": {
         "Handler": "index.handler",
         "CodeUri": "./src/upload",
-        "Runtime": "nodejs8.10",
+        "Runtime": "nodejs12.x",
         "MemorySize": 3008,
         "Timeout": 60,
         "Environment": {
@@ -618,7 +636,7 @@
           "https://${restApiId}.execute-api.${AWS::Region}.amazonaws.com/staging",
           {
             "restApiId": {
-              "Ref": "NodeS3Upload"
+              "Ref": "ExampleS3Upload"
             }
           }
         ]
@@ -627,7 +645,20 @@
     "restApiId": {
       "Description": "HTTP restApiId",
       "Value": {
-        "Ref": "NodeS3Upload"
+        "Ref": "ExampleS3Upload"
+      }
+    },
+    "BucketURL": {
+      "Description": "Bucket URL",
+      "Value": {
+        "Fn::Sub": [
+          "http://${bukkit}.s3-website-${AWS::Region}.amazonaws.com",
+          {
+            "bukkit": {
+              "Ref": "StaticBucket"
+            }
+          }
+        ]
       }
     },
     "UploadBucket": {
@@ -640,7 +671,7 @@
   "Parameters": {
     "BucketPrefix": {
       "Type": "String",
-      "Default": "11e5l9"
+      "Default": "ao4f7hz"
     }
   }
 }

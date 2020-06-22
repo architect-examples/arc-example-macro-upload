@@ -1,5 +1,5 @@
 let aws = require('aws-sdk')
-let gm = require('gm').subClass({imageMagick: true})
+let gm = require('gm')
 
 const MAX_WIDTH = 100
 const MAX_HEIGHT = 100
@@ -23,7 +23,8 @@ module.exports = function thumbnail({bucket, key, mime, ext, body}) {
 
   // if it is an image resize it
   return new Promise(function argh(res, rej) {
-    gm(body).size(function size(err, size) {
+    let mg = gm.subClass({imageMagick: true})
+    mg(body).size(function size(err, size) {
       if (err) rej(err)
       else {
 

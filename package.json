@@ -1,18 +1,14 @@
 {
-  "name": "node-s3-upload",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "arc-example-s3-upload",
   "scripts": {
-    "lint": "eslint src --ignore-pattern node_modules --fix"
+    "lint": "eslint src --ignore-pattern node_modules --fix",
+    "deploy": "arc deploy"
   },
-  "keywords": [],
   "author": "Brian LeRoux <b@brian.io>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@architect/architect": "^6.0.10",
-    "@architect/macro-upload": "^1.0.0",
-    "aws-sdk": "^2.530.0",
+    "@architect/architect": "^6.4.1",
+    "@architect/macro-upload": "^1.0.1",
     "eslint": "^6.4.0"
   }
 }
