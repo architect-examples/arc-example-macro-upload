@@ -9,6 +9,6 @@
   "dependencies": {
     "@architect/architect": "^9.1.0",
     "@architect/macro-upload": "^1.0.1",
-    "eslint": "^7.32.0"
+    "eslint": "^8.20.0"
   }
 }
