@@ -7,7 +7,7 @@
   "author": "Brian LeRoux <b@brian.io>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@architect/architect": "^9.1.0",
+    "@architect/architect": "^10.7.1",
     "@architect/macro-upload": "^1.0.1",
     "eslint": "^7.32.0"
   }
